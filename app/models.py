@@ -22,6 +22,7 @@ class Client(models.Model):
     fio_o = models.CharField(max_length=100, verbose_name="отчество", help_text="отчество пассажира")
     passport = models.CharField(max_length=10, unique=True, verbose_name="паспорт",
                                 help_text="паспортные данные пассажира: 10 цифр", db_index=True)
+    money = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="деньги", help_text="сумма денег на счете")
 
     class Meta:
         ordering = ["fio_f", "fio_i", "fio_o", ]
@@ -46,12 +47,12 @@ class ListOfServices(models.Model):
 
 
 class Bus(models.Model):
-    BRAND_CHOICES = {
-        "NF": "NEFAZ",
-        "MS": "MERCEDES",
-        "IK": "IKARUS",
-        "MN": "MEN",
-    }
+    BRAND_CHOICES = (
+        ("NF", "NEFAZ"),
+        ("MS", "MERCEDES"),
+        ("IK", "IKARUS"),
+        ("MN", "MEN"),
+    )
     state_number = models.CharField(max_length=10, unique=True, verbose_name="госномер",
                                     help_text="государственный регистрационный номер")
     brand = models.CharField(max_length=2, choices=BRAND_CHOICES, verbose_name="марка", help_text="марка автобуса")
@@ -74,8 +75,7 @@ class BusDriver(models.Model):
 
 
 class Services(models.Model):
-    service = models.ForeignKey(ListOfServices, on_delete=models.CASCADE, verbose_name="услуги",
-                                help_text="заказанные услуги")
+    service = models.ManyToManyField(ListOfServices, verbose_name="услуги", help_text="заказанные услуги")
 
     class Meta:
         verbose_name = "допуслуга"
@@ -85,14 +85,38 @@ class Services(models.Model):
         return self.service
 
 
+class StartCity(models.Model):
+    city_start = models.ForeignKey(Cities, on_delete=models.CASCADE, verbose_name="старт",
+                                   help_text="город отправления")
+
+    class Meta:
+        verbose_name = "город"
+        verbose_name_plural = "города"
+
+    def __str__(self):
+        return self.city_start
+
+
+class FinishCity(models.Model):
+    city_finish = models.ForeignKey(Cities, on_delete=models.CASCADE, verbose_name="финиш",
+                                    help_text="город назначения")
+
+    class Meta:
+        verbose_name = "город"
+        verbose_name_plural = "города"
+
+    def __str__(self):
+        return self.city_finish
+
+
 class Route(models.Model):
     id_route = models.IntegerField(primary_key=True)
-    city_start = models.OneToOneField(Cities, on_delete=models.CASCADE, verbose_name="откуда",
-                                      help_text="город отправления")
-    city_finish = models.OneToOneField(Cities, on_delete=models.CASCADE, verbose_name="куда",
-                                       help_text="город назначения")
-    bus = models.OneToOneField(Bus, null=True, on_delete=models.SET_NULL, verbose_name="автобус",
-                               help_text="назначенный автобус")
+    city_start = models.ForeignKey(StartCity, on_delete=models.CASCADE, verbose_name="откуда",
+                                   help_text="город отправления")
+    city_finish = models.ForeignKey(FinishCity, on_delete=models.CASCADE, verbose_name="куда",
+                                    help_text="город назначения")
+    bus = models.ForeignKey(Bus, null=True, on_delete=models.SET_NULL, verbose_name="автобус",
+                            help_text="назначенный автобус")
     price = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="цена",
                                 help_text="стоимость проезда по маршруту")
 
@@ -107,10 +131,9 @@ class Route(models.Model):
 class Ticket(models.Model):
     id_ticket = models.IntegerField(primary_key=True)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, verbose_name="пассажир", help_text="пассажир")
-    route = models.OneToOneField(Route, on_delete=models.CASCADE, verbose_name="маршрут", help_text="маршрут поездки")
-    price = models.OneToOneField(Route, on_delete=models.CASCADE, verbose_name="цена", help_text="стоимость билета")
-    services = models.OneToOneField(Services, null=True, on_delete=models.SET_NULL, primary_key=True,
-                                    verbose_name="услуги", help_text="дополнительные услуги")
+    route = models.ForeignKey(Route, on_delete=models.CASCADE, verbose_name="маршрут", help_text="маршрут поездки")
+    services = models.OneToOneField(Services, null=True, on_delete=models.SET_NULL, verbose_name="услуги",
+                                    help_text="дополнительные услуги")
 
     class Meta:
         verbose_name = "билет"
