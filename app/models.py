@@ -33,19 +33,6 @@ class Client(models.Model):
         return self.passport
 
 
-class ListOfServices(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name="услуга", help_text="наименование услуги")
-    price = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="цена", help_text="стоимость услуги")
-
-    class Meta:
-        ordering = ["name", ]
-        verbose_name = "услуга"
-        verbose_name_plural = "услуги"
-
-    def __str__(self):
-        return self.name
-
-
 class Bus(models.Model):
     BRAND_CHOICES = (
         ("NF", "NEFAZ"),
@@ -58,6 +45,13 @@ class Bus(models.Model):
     brand = models.CharField(max_length=2, choices=BRAND_CHOICES, verbose_name="марка", help_text="марка автобуса")
     count_place = models.PositiveSmallIntegerField(validators=[MinValueValidator(20), MaxValueValidator(120)],
                                                    verbose_name="места", help_text="количество посадочных мест")
+
+    class Meta:
+        verbose_name = "автобус"
+        verbose_name_plural = "автобусы"
+
+    def __str__(self):
+        return self.brand
 
 
 class BusDriver(models.Model):
@@ -74,27 +68,16 @@ class BusDriver(models.Model):
         return self.first_name
 
 
-class Services(models.Model):
-    service = models.ManyToManyField(ListOfServices, verbose_name="услуги", help_text="заказанные услуги")
-
-    class Meta:
-        verbose_name = "допуслуга"
-        verbose_name_plural = "допуслуги"
-
-    def __str__(self):
-        return self.service
-
-
 class StartCity(models.Model):
     city_start = models.ForeignKey(Cities, on_delete=models.CASCADE, verbose_name="старт",
                                    help_text="город отправления")
 
     class Meta:
-        verbose_name = "город"
-        verbose_name_plural = "города"
+        verbose_name = "город отправления"
+        verbose_name_plural = "города отправления"
 
     def __str__(self):
-        return self.city_start
+        return self.city_start.name
 
 
 class FinishCity(models.Model):
@@ -102,11 +85,11 @@ class FinishCity(models.Model):
                                     help_text="город назначения")
 
     class Meta:
-        verbose_name = "город"
-        verbose_name_plural = "города"
+        verbose_name = "город назначения"
+        verbose_name_plural = "города назначения"
 
     def __str__(self):
-        return self.city_finish
+        return self.city_finish.name
 
 
 class Route(models.Model):
@@ -125,19 +108,41 @@ class Route(models.Model):
         verbose_name_plural = "маршруты"
 
     def __str__(self):
-        return self.id_route
+        return str(self.id_route)
 
 
 class Ticket(models.Model):
     id_ticket = models.IntegerField(primary_key=True)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, verbose_name="пассажир", help_text="пассажир")
     route = models.ForeignKey(Route, on_delete=models.CASCADE, verbose_name="маршрут", help_text="маршрут поездки")
-    services = models.OneToOneField(Services, null=True, on_delete=models.SET_NULL, verbose_name="услуги",
-                                    help_text="дополнительные услуги")
 
     class Meta:
         verbose_name = "билет"
         verbose_name_plural = "билеты"
 
     def __str__(self):
-        return self.id_ticket
+        return str(self.id_ticket)
+
+
+class ListOfServices(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name="услуга", help_text="наименование услуги")
+    price = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="цена", help_text="стоимость услуги")
+
+    class Meta:
+        ordering = ["name", ]
+        verbose_name = "услуги"
+        verbose_name_plural = "услуги"
+
+    def __str__(self):
+        return self.name
+
+
+class Services(models.Model):
+    ticket = models.ForeignKey(Ticket, blank=True, null=True, default=None, on_delete=models.CASCADE,
+                               verbose_name="билет", help_text="билет к которому принадлежит заказ")
+    service = models.ManyToManyField(ListOfServices, blank=True, null=True, default=None, verbose_name="тип",
+                                     help_text="тип дополнительный услуги")
+
+    class Meta:
+        verbose_name = "заказанная услуга"
+        verbose_name_plural = "заказанные услуги"
