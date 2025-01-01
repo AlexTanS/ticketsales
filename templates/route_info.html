@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+{% for route in list_routers %}
+
+<div class="card text-center">
+    <div class="card-header">
+        <p>Маршрут номер: {{ route.number_route }}</p>
+    </div>
+    <div class="card-body">
+        <h5 class="card-title">{{ route.start }} - {{ route.finish }}</h5>
+        <p class="card-text">Марка автобуса: {{ route.bus }}, стоимость проезда: {{ route.price }}</p>
+
+        {% if route.empty_place == 0 %}
+            <a href="#" class="btn disabled">Купить билет</a>
+        {% else %}
+            <a href="#" class="btn btn-primary">Купить билет</a>
+        {% endif %}
+
+    </div>
+    <div class="card-footer text-muted">
+        <p>Всего мест: {{route.all_place}}. Свободно: {{route.empty_place}}</p>
+    </div>
+</div>
+<br>
+{% endfor %}
+
+{% endblock %}

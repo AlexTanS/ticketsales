@@ -2,8 +2,6 @@ from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 
-# TODO для паспорта и госномера сделать проверку в форме занесения данных чтобы минимум и максимум символов совпадали
-
 class Cities(models.Model):
     name = models.CharField(max_length=30, unique=True, verbose_name="название города",
                             help_text="здесь указывается название города")
@@ -140,7 +138,7 @@ class ListOfServices(models.Model):
 class Services(models.Model):
     ticket = models.ForeignKey(Ticket, blank=True, null=True, default=None, on_delete=models.CASCADE,
                                verbose_name="билет", help_text="билет к которому принадлежит заказ")
-    service = models.ManyToManyField(ListOfServices, blank=True, null=True, default=None, verbose_name="тип",
+    service = models.ManyToManyField(ListOfServices, blank=True, default=None, verbose_name="тип",
                                      help_text="тип дополнительный услуги")
 
     class Meta:
