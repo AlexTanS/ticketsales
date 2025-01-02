@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<h4 class="text-center">Профиль пользователя "{{ user.username }}"</h4>
+{% if user.first_name and user.last_name %}
+    <p class="text-center">Здравствуйте, {{ user.first_name }} {{ user.last_name }}!</p>
+{% else %}
+    <p class="text-center">Здравствуйте!</p>
+{% endif %}
+    <h6 class="text-center">Ваши билеты</h6>
+{% endblock %}

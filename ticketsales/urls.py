@@ -22,7 +22,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("", index, name="index"),
     path("route_info/", route_info, name="route_info"),
-    path("passenger_registration/", passenger_registration, name="passenger_registration"),
     path("ticket_buy/", ticket_buy, name="ticket_buy"),
     path("about/", about, name="about"),
+    path("accounts/register_done", RegisterDoneView.as_view(), name="register_done"),
+    path("accounts/register", RegisterUserView.as_view(), name="register"),
+    path("accounts/login", AppLoginView.as_view(), name="login"),
+    path("accounts/logout", AppLogoutView.as_view(), name="logout"),
+    path("accounts/profile", profile, name="profile"),
 ]

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h4 class="text-center">Регистрация нового пользователя</h4>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="d-flex justify-content-center">
+        {{ form }}
+    </div>
+    <input type="submit" value="Регистрация"/>
+    <input type="hidden" name="next" value="{% url 'register_done' %}"/>
+</form>
+
+{% endblock %}
