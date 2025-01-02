@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpRequest, HttpResponse
-from .models import Route, Ticket
+from .models import Route, Ticket, Client
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
@@ -21,7 +21,7 @@ def index(request: HttpRequest):
 
 def route_info(request: HttpRequest):
     """Информация о маршрутах"""
-    routers = Route.objects.all()[:5]
+    routers = Route.objects.all()[:5]  # первые пять маршрутов
     list_routers = []
     for r in routers:
         # получаю список всех билетов связанных с данным маршрутом
@@ -42,9 +42,13 @@ def route_info(request: HttpRequest):
     return render(request=request, template_name="route_info.html", context=content)
 
 
+@login_required
 def ticket_buy(request: HttpRequest):
     """Страница с формой покупки билета"""
-    pass
+    content = {
+        "title": "Покупка"
+    }
+    return render(request=request, template_name="", context=content)
 
 
 def about(request: HttpRequest):
@@ -88,33 +92,26 @@ class RegisterDoneView(TemplateView):
 @login_required
 def profile(request: HttpRequest):
     """Страница профиля зарегистрированного пользователя"""
+    tickets = Ticket.objects.filter(owner=request.user.pk)
+    list_tickets = []
+    for t in tickets:
+        list_tickets.append(
+            {
+                "id_ticket": t.id_ticket,
+                "fio_f": t.client.fio_f,
+                "fio_i": t.client.fio_i,
+                "fio_o": t.client.fio_o,
+                "route_number": t.route.id_route,
+                "route_start": t.route.city_start,
+                "route_finish": t.route.city_finish,
+                "price": t.route.price,
+                "bus": t.route.bus.get_brand_display(),
+                "state_number": t.route.bus.state_number,
+                "passport": t.client.passport,
+            }
+        )
     content = {
-        "title": "Профиль"
+        "title": "Профиль",
+        "list_tickets": list_tickets,
     }
     return render(request=request, template_name="profile.html", context=content)
-
-# def signup_view(request: HttpRequest):
-#     """Регистрация"""
-#     if request.method == 'POST':
-#         form = SignUpForm(request.POST)
-#         if form.is_valid():
-#             user = form.save()  # Сохраняем нового пользователя
-#             login(request, user)  # Выполняем вход
-#             return redirect('index')  # Перенаправляем на главную страницу
-#     else:
-#         form = SignUpForm()
-#     return render(request=request, template_name='signup.html', context={'form': form})
-#
-#
-# def login_view(request: HttpRequest):
-#     """Вход пользователя"""
-#     form = LoginForm(data=request.POST or None)
-#     if request.method == 'POST':
-#         if form.is_valid():
-#             username = form.cleaned_data['username']
-#             password = form.cleaned_data['password']
-#             user = authenticate(username=username, password=password)  # Проверяем учетные данные
-#             if user is not None:
-#                 login(request, user)  # Выполняем вход
-#                 return redirect('route_info')  # Перенаправляем на страницу маршрутов
-#     return render(request=request, template_name='registration/login.html', context={'form': form})

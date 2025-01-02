@@ -9,4 +9,27 @@
     <p class="text-center">Здравствуйте!</p>
 {% endif %}
     <h6 class="text-center">Ваши билеты</h6>
+
+
+{% for ticket in list_tickets %}
+
+<div class="card text-center">
+    <div class="card-header">
+        <p>Билет номер: {{ ticket.id_ticket }}</p>
+    </div>
+    <div class="card-body">
+        <h5 class="card-title">Маршрут № {{ticket.route_number}}: {{ticket.route_start}} - {{ticket.route_finish}}</h5>
+        <p class="card-text">Пассажир: {{ ticket.fio_f }} {{ ticket.fio_i }} {{ ticket.fio_o }}</p>
+        <p class="card-text">Номер паспорта: {{ticket.passport}}</p>
+        <p class="card-text">Автобус: {{ticket.bus}}, госномер: {{ticket.state_number}}</p>
+    </div>
+    <div class="card-footer text-muted">
+        <p>Стоимость поездки: {{ticket.price}}</p>
+    </div>
+</div>
+<br>
+{% endfor %}
+
+
+
 {% endblock %}

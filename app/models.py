@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.contrib.auth.models import User
 
 
 class Cities(models.Model):
@@ -111,6 +112,8 @@ class Route(models.Model):
 
 class Ticket(models.Model):
     id_ticket = models.IntegerField(primary_key=True)
+    owner = models.ForeignKey(User, null=True, on_delete=models.CASCADE, verbose_name="пользователь",
+                              help_text="пользователь который регистрировал билет")
     client = models.ForeignKey(Client, on_delete=models.CASCADE, verbose_name="пассажир", help_text="пассажир")
     route = models.ForeignKey(Route, on_delete=models.CASCADE, verbose_name="маршрут", help_text="маршрут поездки")
 
