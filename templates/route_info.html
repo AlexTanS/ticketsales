@@ -14,9 +14,13 @@
         <p class="card-text">Марка автобуса: {{ route.bus }}, стоимость проезда: {{ route.price }}</p>
 
         {% if route.empty_place == 0 %}
-            <a href="#" class="btn disabled">Купить билет</a>
+        <a href="#" class="btn disabled">Купить билет</a>
         {% else %}
-            <a href="#" class="btn btn-primary">Купить билет</a>
+        {% if user.is_authenticated %}
+            <a href="/ticket_buy/?number_route={{route.number_route}}" class="btn btn-primary">Купить билет</a>
+        {% else %}
+        <a href="{% url 'login' %}" class="btn btn-primary">Купить билет</a>
+        {% endif %}
         {% endif %}
 
     </div>

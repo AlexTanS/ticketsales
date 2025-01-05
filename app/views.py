@@ -6,10 +6,10 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.views.generic.edit import CreateView
 from django.views.generic.base import TemplateView
-from .forms import RegisterUserForm
+from django.http import HttpResponseNotFound
+from django.db.models import Max
+from .forms import RegisterUserForm, BuyTicketClient
 
-
-# TODO для паспорта сделать проверку в форме занесения данных чтобы минимум и максимум символов совпадали
 
 def index(request: HttpRequest):
     """Главная страница"""
@@ -48,7 +48,56 @@ def ticket_buy(request: HttpRequest):
     content = {
         "title": "Покупка"
     }
-    return render(request=request, template_name="", context=content)
+
+    try:
+        number_route = int(request.GET.get("number_route"))  # номер маршрута
+    except ValueError:
+        return HttpResponseNotFound("Ошибка, данного маршрута не существует")
+
+    if not number_route:  # если номера нет
+        return HttpResponseNotFound("Ошибка, данного маршрута не существует")
+    else:
+        if request.method == "POST":
+            form = BuyTicketClient(data=request.POST)
+            if form.is_valid():
+
+                # данные из формы
+                fio_f = form.cleaned_data["fio_f"]
+                fio_i = form.cleaned_data["fio_i"]
+                fio_o = form.cleaned_data["fio_o"]
+                passport = form.cleaned_data["passport"]
+                money = form.cleaned_data["money"]
+
+                # обработка данных
+                if Client.objects.filter(passport=passport):  # если уже есть такой пассажир
+                    # изменяю старую запись
+                    client = Client.objects.get(passport=passport)
+                    client.fio_f = fio_f
+                    client.fio_i = fio_i
+                    client.fio_o = fio_o
+                    client.passport = passport
+                    client.money = money
+                    client.save()
+                else:  # если пассажира в БД нет
+                    client = Client(fio_f=fio_f, fio_i=fio_i, fio_o=fio_o, passport=passport, money=money)
+                    client.save()
+
+                # формирую новый id_ticket
+                new_id_ticket = Ticket.objects.aggregate(max_value=Max("id_ticket"))["max_value"] + 1
+                new_owner = request.user
+                new_client = client
+                new_route = Route.objects.get(id_route=number_route)
+                new_ticket = Ticket(id_ticket=new_id_ticket, owner=new_owner, client=new_client, route=new_route)
+                new_ticket.save()
+
+                content["form"] = form
+                return redirect("profile")
+            else:
+                content["error"] = "Форма заполнена неправильно"
+                content["form"] = BuyTicketClient()
+        else:
+            content["form"] = BuyTicketClient()
+    return render(request=request, template_name="ticket_buy.html", context=content)
 
 
 def about(request: HttpRequest):

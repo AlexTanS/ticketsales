@@ -19,7 +19,7 @@ class Client(models.Model):
     fio_f = models.CharField(max_length=100, verbose_name="фамилия", help_text="фамилия пассажира")
     fio_i = models.CharField(max_length=100, verbose_name="имя", help_text="имя пассажира")
     fio_o = models.CharField(max_length=100, verbose_name="отчество", help_text="отчество пассажира")
-    passport = models.CharField(max_length=10, unique=True, verbose_name="паспорт",
+    passport = models.CharField(max_length=10, verbose_name="паспорт",
                                 help_text="паспортные данные пассажира: 10 цифр", db_index=True)
     money = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="деньги", help_text="сумма денег на счете")
 
@@ -113,7 +113,7 @@ class Route(models.Model):
 class Ticket(models.Model):
     id_ticket = models.IntegerField(primary_key=True)
     owner = models.ForeignKey(User, null=True, on_delete=models.CASCADE, verbose_name="пользователь",
-                              help_text="пользователь который регистрировал билет")
+                              help_text="пользователь который регистрировал билет", related_name="clients")
     client = models.ForeignKey(Client, on_delete=models.CASCADE, verbose_name="пассажир", help_text="пассажир")
     route = models.ForeignKey(Route, on_delete=models.CASCADE, verbose_name="маршрут", help_text="маршрут поездки")
 

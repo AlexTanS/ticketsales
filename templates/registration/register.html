@@ -6,7 +6,7 @@
 <form method="post">
     {% csrf_token %}
     <div class="d-flex justify-content-center">
-        {{ form }}
+        {{ form.as_p }}
     </div>
     <input type="submit" value="Регистрация"/>
     <input type="hidden" name="next" value="{% url 'register_done' %}"/>
