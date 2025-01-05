@@ -6,15 +6,9 @@
 <h4 class="text-center">{{ error }}</h4>
 {% endif %}
 
-<!--<form action="{% url 'ticket_buy' %}" method="post">-->
-<!--    {% csrf_token %}-->
-<!--    {{form.as_p}}-->
-<!--    <button type="submit">Добавить</button>-->
-<!--</form>-->
-
 <form method="post">
     {% csrf_token %}
-    {{form}}
+    {{form.as_p}}
     <button type="submit">Добавить</button>
 </form>
 

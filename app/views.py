@@ -8,6 +8,7 @@ from django.views.generic.edit import CreateView
 from django.views.generic.base import TemplateView
 from django.http import HttpResponseNotFound
 from django.db.models import Max
+from django.core.paginator import Paginator
 from .forms import RegisterUserForm, BuyTicketClient
 
 
@@ -21,7 +22,7 @@ def index(request: HttpRequest):
 
 def route_info(request: HttpRequest):
     """Информация о маршрутах"""
-    routers = Route.objects.all()[:5]  # первые пять маршрутов
+    routers = Route.objects.all()
     list_routers = []
     for r in routers:
         # получаю список всех билетов связанных с данным маршрутом
@@ -35,9 +36,12 @@ def route_info(request: HttpRequest):
                              "finish": r.city_finish,
                              "bus": r.bus.get_brand_display(),
                              "price": r.price})
+    paginator = Paginator(list_routers, 3)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
     content = {
         "title": "Маршруты",
-        "list_routers": list_routers,
+        "page_obj": page_obj,
     }
     return render(request=request, template_name="route_info.html", context=content)
 
@@ -159,8 +163,11 @@ def profile(request: HttpRequest):
                 "passport": t.client.passport,
             }
         )
+    paginator = Paginator(list_tickets, 5)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
     content = {
         "title": "Профиль",
-        "list_tickets": list_tickets,
+        "page_obj": page_obj,
     }
     return render(request=request, template_name="profile.html", context=content)

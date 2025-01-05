@@ -6,7 +6,12 @@
 <form method="post">
     {% csrf_token %}
     <div class="d-flex justify-content-center">
-        {{ form.as_p }}
+        {{ form.username.label_tag }}
+        {{ form.username }}
+        {{ form.password1.label_tag }}
+        {{ form.password1 }}
+        {{ form.password2.label_tag }}
+        {{ form.password2 }}
     </div>
     <input type="submit" value="Регистрация"/>
     <input type="hidden" name="next" value="{% url 'register_done' %}"/>
