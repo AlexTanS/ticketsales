@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect
 from django.http import HttpRequest, HttpResponse
-from .models import Route, Ticket, Client
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
@@ -9,7 +8,17 @@ from django.views.generic.base import TemplateView
 from django.http import HttpResponseNotFound
 from django.db.models import Max
 from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.contrib.auth.hashers import check_password
+
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.request import Request
+
+from .serializers import ListOfServicesSerializer
 from .forms import RegisterUserForm, BuyTicketClient
+from .models import Route, Ticket, Client, ListOfServices, Services
 
 
 def index(request: HttpRequest):
@@ -171,3 +180,52 @@ def profile(request: HttpRequest):
         "page_obj": page_obj,
     }
     return render(request=request, template_name="profile.html", context=content)
+
+
+def api_list_of_services(request: Request):
+    """Данные обо всех дополнительных услугах"""
+    if request.method == "GET":
+        services = ListOfServices.objects.all()
+        serializer = ListOfServicesSerializer(services, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+
+@api_view(["GET", "POST"])
+def api_service(request: Request):
+    """Доп услуги"""
+    data = request.data
+    # проверка номера билета
+    if not Ticket.objects.filter(id_ticket=data["id_ticket"]):
+        return Response({"response": "Такого билета не существует"}, status=status.HTTP_200_OK)
+    # проверка пароля
+    user_password = Ticket.objects.filter(id_ticket=data["id_ticket"])[0].owner.password
+    if not check_password(data["password"], user_password):
+        return Response({"response": "Неверный пароль"}, status=status.HTTP_200_OK)
+    # проверка наличия данной услуги в билете
+    instance_list_of_service = ListOfServices.objects.get(name=data["service"])  # нужный сервис
+    instance_ticket = Ticket.objects.get(id_ticket=data["id_ticket"])  # билет
+    try:
+        # ошибка выдается если нет записи, если все норм - взять существующую запись
+        list_services = Services.objects.filter(ticket=instance_ticket)[0].service.all()  # список полученных услуг
+        new_service = Services.objects.get(ticket=instance_ticket)  # запись с услугами
+    except IndexError:
+        # новая запись об услуге
+        new_service = Services.objects.create(ticket=instance_ticket)
+        list_services = []
+    services_buy = []
+    for s in list_services:
+        services_buy.append(str(s))
+    if data["service"] in services_buy:
+        return Response({"response": "Данная услуга уже включена в билет"}, status=status.HTTP_200_OK)
+
+    new_service.service.add(instance_list_of_service)
+    # расчет средств на  счету с учетом услуги
+    client_passport = Ticket.objects.get(id_ticket=data["id_ticket"]).client.passport
+    client = Client.objects.get(passport=client_passport)
+    price = ListOfServices.objects.get(name=data["service"]).price  # стоимость услуги
+    new_money = client.money - price
+    client.money = new_money
+    client.save()
+    # отправка ответа об успехе
+    d = {"response": f"Услуга успешно включена в стоимость вашего билета, у вас на счету осталось {new_money}"}
+    return Response(d, status=status.HTTP_200_OK)
